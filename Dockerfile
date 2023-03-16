@@ -4,19 +4,26 @@ LABEL maintainer="adrian_s_lps"
 ENV PYTHONUNBUFFERED 1
 
 COPY ./requirements.txt /tmp/requirements.txt
+COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
 WORKDIR /app
+VOLUME ./app /app
 EXPOSE 8000
 
+ARG DEV=false
 RUN python -m venv /py && \ 
   /py/bin/pip install --upgrade pip && \
   /py/bin/pip install -r /tmp/requirements.txt && \
-  rm -rf /tmp/* && \
-  adduser --disabled-password --no-create-home \
-    django-user
+  if [ $DEV = "true" ]; then \
+    /py/bin/pip install -r /tmp/requirements.dev.txt ; \
+  fi && \
+  rm -rf /tmp/* # && \
+  # addgroup django && \
+  # adduser --disabled-password --no-create-home \
+  #   django-user -g django && \
+  # chown -R django-user:django /app
+ENV PATH /py/bin:$PATH
 
-ENV PATH "/py/bin:$PATH"
-
-USER django-user
+# USER django-user
 
 
