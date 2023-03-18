@@ -1,0 +1,24 @@
+---
+name: Code Checks
+
+on:
+  - push
+
+jobs:
+  test-lint:
+    name: Test and Lint
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Docker Hub login
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Checkout # Disponibilize code for the actions
+        uses: actions/checkout@v2
+      - name: Run Tests
+        run: docker-compose run --rm django-app sh -c "python manage.py test"
+      - name: Python Lint
+        run: docker-compose run --rm django-app sh -c "flake8"
+        
+

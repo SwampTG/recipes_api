@@ -7,7 +7,6 @@ COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
 COPY ./app /app
 WORKDIR /app
-VOLUME ./app /app
 EXPOSE 8000
 
 ARG DEV=false
@@ -17,13 +16,15 @@ RUN python -m venv /py && \
   if [ $DEV = "true" ]; then \
     /py/bin/pip install -r /tmp/requirements.dev.txt ; \
   fi && \
-  rm -rf /tmp/* # && \
-  # addgroup django && \
-  # adduser --disabled-password --no-create-home \
-  #   django-user -g django && \
-  # chown -R django-user:django /app
+  . /py/bin/activate && \
+  rm -rf /tmp/* && \
+  addgroup django && \
+  adduser --disabled-password --no-create-home \
+    django-user -g django && \
+  chown -R django-user:django /app
+
 ENV PATH /py/bin:$PATH
 
-# USER django-user
+USER django-user
 
 
