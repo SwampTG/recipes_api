@@ -12,21 +12,26 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from core.models import Recipe
-from recipe.serializers import RecipeSerializer
+from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
 
-RECIPES_URL = reverse('recipe:recipe-list')
+RECIPES_URL = reverse("recipe:recipe-list")
+
+
+def detail_url(recipe_id):
+    """Create and return detail of specific recipe."""
+    return reverse("recipe:recipe-detail", args=[recipe_id])
 
 
 def create_recipe(user, **kwargs):
     """Create and return recipe instance."""
 
     defaults = {
-        'title': 'Test Recipe',
-        'time_minutes': 22,
-        'price': Decimal('5.25'),
-        'description': 'Sample description',
-        'link': 'http://example.com/recipe.pdf',
+        "title": "Test Recipe",
+        "time_minutes": 22,
+        "price": Decimal("5.25"),
+        "description": "Sample description",
+        "link": "http://example.com/recipe.pdf",
     }
     defaults.update(kwargs)
 
@@ -54,8 +59,8 @@ class PrivateRecipeAPITests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            'user@example.com',
-            'testpass123',
+            "user@example.com",
+            "testpass123",
         )
         self.client.force_authenticate(self.user)
 
@@ -67,7 +72,7 @@ class PrivateRecipeAPITests(TestCase):
 
         res = self.client.get(RECIPES_URL)
 
-        recipes = Recipe.objects.all().order_by('id')
+        recipes = Recipe.objects.all().order_by("id")
         serializer = RecipeSerializer(recipes, many=True)
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
@@ -77,17 +82,17 @@ class PrivateRecipeAPITests(TestCase):
         """Test list of recipes is limited to authenticated user."""
 
         other_user = get_user_model().objects.create_user(
-            'different@user.com',
-            'password123',
+            "different@user.com",
+            "password123",
         )
 
-        create_recipe(user=other_user, description='Changed Description')
-        create_recipe(user=self.user, description='Another description')
+        create_recipe(user=other_user, description="Changed Description")
+        create_recipe(user=self.user, description="Another description")
 
         self.client.force_authenticate(other_user)
 
         res = self.client.get(RECIPES_URL)
-        recipes = Recipe.objects.filter(user=other_user).order_by('id')
+        recipes = Recipe.objects.filter(user=other_user).order_by("id")
         serializer = RecipeSerializer(recipes, many=True)
 
         print(res.data)
@@ -95,3 +100,32 @@ class PrivateRecipeAPITests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data[0], serializer.data[0])
+
+    def test_get_recipe_detail(self):
+        """Test get recipe detail."""
+
+        recipe = create_recipe(user=self.user)
+
+        url = detail_url(recipe.id)
+        res = self.client.get(url)
+
+        serializer = RecipeDetailSerializer(recipe)
+        self.assertEqual(res.data, serializer.data)
+
+    def test_create_recipe(self):
+        """Test creating a recipe."""
+
+        payload = {
+            "title": "Sample",
+            "time_minutes": 30,
+            "price": Decimal("5.99"),
+        }
+
+        res = self.client.post(RECIPES_URL, payload)
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        recipe = Recipe.objects.filter(id=res.data["id"])[0]
+
+        for key, value in payload.items():
+            self.assertEqual(getattr(recipe, key), value)
+
+        self.assertEqual(recipe.user, self.user)

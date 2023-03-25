@@ -11,10 +11,10 @@ from recipe import views
 
 
 router = DefaultRouter()
-router.register('recipes', views.RecipeViewSet)
+router.register("recipes", views.RecipeViewSet)
 
-app_name = 'recipe'
+app_name = "recipe"
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
