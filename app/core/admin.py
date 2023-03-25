@@ -53,3 +53,4 @@ class UserAdmin(BaseUserAdmin):
 # Register the model page for the admin site,
 # using the custom admin manager.
 admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Recipe)
