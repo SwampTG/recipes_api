@@ -54,3 +54,4 @@ class UserAdmin(BaseUserAdmin):
 # using the custom admin manager.
 admin.site.register(models.User, UserAdmin)
 admin.site.register(models.Recipe)
+admin.site.register(models.Tag)
